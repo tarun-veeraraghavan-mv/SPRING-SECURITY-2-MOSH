@@ -2,6 +2,7 @@ package com.security.v2;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -14,10 +15,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -26,6 +27,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
   private final UserDetailsService userDetailsService;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
   public SecurityFilterChain applicationSecurity(HttpSecurity http) throws Exception {
@@ -43,7 +45,10 @@ public class SecurityConfig {
             .requestMatchers("/").permitAll()
             .requestMatchers("/auth/login").permitAll()
             .requestMatchers("/auth/signin").permitAll()
-            .anyRequest().authenticated());
+            .requestMatchers("/auth/refresh").permitAll()
+            .anyRequest().authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .exceptionHandling(c -> c.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
 
     return http.build();
   }
