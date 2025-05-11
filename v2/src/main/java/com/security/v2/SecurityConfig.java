@@ -43,12 +43,17 @@ public class SecurityConfig {
         .formLogin(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(registry -> registry
             .requestMatchers("/").permitAll()
+            .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
             .requestMatchers("/auth/login").permitAll()
             .requestMatchers("/auth/signin").permitAll()
             .requestMatchers("/auth/refresh").permitAll()
             .anyRequest().authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .exceptionHandling(c -> c.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
+        .exceptionHandling(c -> {
+          c.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
+          c.accessDeniedHandler(
+              (request, response, accessDeniedException) -> response.setStatus(HttpStatus.FORBIDDEN.value()));
+        });
 
     return http.build();
   }

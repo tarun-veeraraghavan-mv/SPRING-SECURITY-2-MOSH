@@ -33,6 +33,7 @@ public class AuthController {
   @PostMapping("/signin")
   public ResponseEntity<User> signin(@RequestBody User user) {
     user.setPassword(encoder.encode(user.getPassword()));
+    user.setRole(Role.USER);
     User savedUser = userRepository.save(user);
     return ResponseEntity.ok(savedUser);
   }
